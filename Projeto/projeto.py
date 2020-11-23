@@ -21,13 +21,10 @@ clock = pygame.time.Clock()
 def jogo():
     clock.tick(60)
     game = 1
-    
-    
-
 
     #imagens
     #Fundo do menu
-    image_menu = pygame.image.load('Imagens/fundo-menu.png').convert()
+    image_menu = pygame.image.load ('Imagens/fundo-menu.png').convert()
     image_menu = pygame.transform.scale(image_menu, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
     #Fundo jogo
@@ -52,25 +49,28 @@ def jogo():
         menu_tela(image_menu)
 def textos (text, cor, tamanho, x, y):
     font = pygame.font.SysFont(None, tamanho)
-    title = font.render('{text}', True, cor)
+    title = font.render(text, True, cor)
     window.blit(title, (x, y))
     return title
 
 #botões
-def botoes():
+def botoes(txt,posx,posy,larg,alt,ci,cf,action = None):
+     
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
+    if x + larg > mouse [0] > x and y + alt > mouse[1] > y:
+        pygame.draw.rect(tela, cf,(x, y, larg,a))
+        if click[0] == 1 and action != None:
+            if action == "ENTRAR":
+                game_loop()
+            elif action == "quit":
+                pygame.quit()
 
-    for event in pygame.events:
-        mouse = pygame.mouse.get_pos()
-        click = pygame.mouse.get_pressed()
+    else:
+        pygame.draw.rect (tela, ci, (x, y, larg,alt))
+
 # tela do menu
 def menu_tela (fundo):
-    #retangulos
-    rect_width = 200
-    rect_height = 75
-    #textos
-    
-    titulo_1 = font.render('Raposa', True, vermelho2)
-    titulo_2 = font.render('Loka', True, vermelho2)
     #titulo_3 = font.render('Iniciar', True, branco)
     inicio = True
     while inicio:
@@ -79,18 +79,16 @@ def menu_tela (fundo):
                 quit()
         #carrega
         #window.blit(fundo, (0, 0))
-        
-        window.blit(titulo_2, (355, 130))
-        window.blit(titulo_3, (((WINDOW_WIDTH-rect_width)/2),((WINDOW_HEIGHT-rect_height+50)/2))
+        textos('Raposa', vermelho2,50, 355, 200)
+        textos('Loka', vermelho2,50, 355, 130)
 
         # Atualiza o estado do jogo
-        pygame.display.set_mode
-        fundo = pygame.transform.scale(fundo, (WINDOW_WIDTH, WINDOW_HEIGHT))
+        window (fundo)
         ##fundo_interacao = background.get_rect()
         ##pygame.draw.rect (window, vermelho, fundo_interacao)
         
-        rect_start = pygame.draw.rect (window, vermelho, (((WINDOW_WIDTH-rect_width)/2),((WINDOW_HEIGHT-rect_height+50)/2),rect_width,rect_height))
-        rect_quit = pygame.draw.rect (window, vermelho, (((WINDOW_WIDTH-rect_width)/2),((WINDOW_HEIGHT+150)/2),rect_width,rect_height))        
+        botoes("Jogar!",150, 300, 100,50,vermelho, branco,"ENTRAR")
+        botoes("Sair!",550, 300, 100,50,vermelho, branco,"quit")        
         pygame.display.update()
 
 
