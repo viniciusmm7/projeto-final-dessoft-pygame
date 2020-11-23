@@ -15,6 +15,8 @@ pygame.SYSTEM_CURSOR_IBEAM
 vermelho = (255,0,0)
 branco=(255,255,255)
 vermelho2=(192, 0, 38)
+verde = (0, 255, 0)
+
 #objeto para atualizações das imagens
 clock = pygame.time.Clock()
 
@@ -24,11 +26,11 @@ def jogo():
 
     #imagens
     #Fundo do menu
-    image_menu = pygame.image.load ('Imagens/fundo-menu.png').convert()
-    image_menu = pygame.transform.scale(image_menu, (WINDOW_WIDTH, WINDOW_HEIGHT))
+    image_menu = pygame.image.load ('Projeto/Imagens/fundo-menu.png').convert()
+    image_menu = pygame.transform.scale( image_menu, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
     #Fundo jogo
-    image_game = pygame.image.load('Imagens/fundo-jogo.png').convert()
+    image_game = pygame.image.load('Projeto/Imagens/fundo-jogo.png').convert()
     image_game = pygame.transform.scale(image_game, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
     
@@ -44,9 +46,11 @@ def jogo():
         
         window.fill((192, 0, 38))
 
-        cor = (0, 255, 0)
+    
         # vertices = [(100, 100), (1500, 100), (1500, 800), (100, 800)]
-        menu_tela(image_menu)
+        game = menu_tela(image_menu)
+
+#textos
 def textos (text, cor, tamanho, x, y):
     font = pygame.font.SysFont(None, tamanho)
     title = font.render(text, True, cor)
@@ -54,45 +58,54 @@ def textos (text, cor, tamanho, x, y):
     return title
 
 #botões
-def botoes(txt,posx,posy,larg,alt,ci,cf,action = None):
+def botoes(txt,posx,posy,larg,alt,cret,clet,action = None):
      
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
-    if x + larg > mouse [0] > x and y + alt > mouse[1] > y:
-        pygame.draw.rect(tela, cf,(x, y, larg,a))
+    if posx + larg > mouse [0] > posx and posy + alt > mouse[1] > posy:
+        pygame.draw.rect(window, clet,(posx, posy, larg,alt))
         if click[0] == 1 and action != None:
-            if action == "ENTRAR":
+            if action == "jogar":
                 game_loop()
-            elif action == "quit":
+            elif action == "sair":
                 pygame.quit()
 
     else:
-        pygame.draw.rect (tela, ci, (x, y, larg,alt))
+        pygame.draw.rect (window, cret, (posx, posy, larg, alt))
+
+    #posicionando o texto
+    Texto = pygame.font.SysFont(None, 50)
+    textSurf, textRect = text_objects(txt, Texto)
+    textRect.center = ((posx + (larg/2)),(posy +(alt/2)))
+    window.blit(textSurf, textRect)
+
+def text_objects(text, font):
+    textSurface = font.render(text, True, branco)
+    return textSurface, textSurface.get_rect()
 
 # tela do menu
 def menu_tela (fundo):
-    #titulo_3 = font.render('Iniciar', True, branco)
+    #titulo_1 = font.render('Iniciar', True, branco)
     inicio = True
     while inicio:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                quit()
-        #carrega
+                inicio=False
+                return 0
+        
+        window.blit(fundo,(0,0))
+        #carrega textos
         #window.blit(fundo, (0, 0))
-        textos('Raposa', vermelho2,50, 355, 200)
-        textos('Loka', vermelho2,50, 355, 130)
+        textos('Raposa', vermelho2,100, (WINDOW_WIDTH/2)-100, 50)
+        textos('Loka', vermelho2,100, (WINDOW_WIDTH/2)-50, 110)
+        textos('Raposa', vermelho,100, (WINDOW_WIDTH/2)-105, 50)
+        textos('Loka', vermelho,100, (WINDOW_WIDTH/2)-55, 110)
 
-        # Atualiza o estado do jogo
-        window (fundo)
-        ##fundo_interacao = background.get_rect()
-        ##pygame.draw.rect (window, vermelho, fundo_interacao)
-        
-        botoes("Jogar!",150, 300, 100,50,vermelho, branco,"ENTRAR")
-        botoes("Sair!",550, 300, 100,50,vermelho, branco,"quit")        
-        pygame.display.update()
+        #botões        
+        botoes("Jogar!", (WINDOW_WIDTH/2)-75, 300, 200,75,vermelho, vermelho2,"jogar")
+        botoes("Sair!", (WINDOW_WIDTH/2)-75, 400, 200,75,vermelho, vermelho2,"sair")        
+        pygame.display.update() 
 
-
-        
 
 jogo()
 # Finalizando pygame
