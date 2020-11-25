@@ -12,8 +12,8 @@ window = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Raposona Braba')
 
 # Configurações necessárias do herói
-HERO_WIDTH = 70 # Mudar
-HERO_HEIGHT = 70 # Mudar
+HERO_WIDTH = 100 # Mudar
+HERO_HEIGHT = 100 # Mudar
 
 hero_y = 2*HEIGHT/3-20
 
@@ -53,7 +53,7 @@ class Hero(pygame.sprite.Sprite):
         self.image = assets['hero_img']
         self.rect = self.image.get_rect()
         self.rect.x = 2 * HERO_WIDTH
-        self.rect.y = hero_y
+        self.rect.y = hero_y-20
         self.speedx = 0
         self.groups = groups
         self.assets = assets
