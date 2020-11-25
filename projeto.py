@@ -17,16 +17,29 @@ HERO_HEIGHT = 100 # Mudar
 
 hero_y = 2*HEIGHT/3-20
 
+#Gravidade
+gravidade=2
+
+#velocidade inicial do pulo
+vi_pulo=30
+
+GROUND = HEIGHT * 5 // 6    
+
 # Configurações necessárias do inimigo
 ENEMY_WIDTH = 30
 ENEMY_HEIGHT = 40
 
 enemy_y = 2*HEIGHT/3
 
+# Define estados possíveis do jogador
+STILL = 0
+pulando = 1
+caindo = 1
+
 # Configurações necessárias do tiro
 
-BULLET_WIDTH = 10
-BULLET_HEIGHT = 10
+BULLET_WIDTH = 50      
+BULLET_HEIGHT = 50
 
 # Inicia assets
 assets = {}
@@ -37,6 +50,7 @@ assets['enemy_img'] = pygame.transform.scale(assets['enemy_img'], (ENEMY_WIDTH, 
 assets['hero_img'] = pygame.image.load('assets/img/hero-right-0.png').convert_alpha()
 assets['hero_img'] = pygame.transform.scale(assets['hero_img'], (HERO_WIDTH, HERO_HEIGHT))
 assets['bullet_img'] = pygame.image.load('assets/img/bullet.png').convert_alpha()
+assets['bullet_img'] = pygame.transform.scale(assets['bullet_img'], (BULLET_WIDTH, BULLET_HEIGHT))
 explosion_anim = []
 for i in range(9):
     filename = 'assets/img/regularExplosion0{}.png'.format(i)
@@ -46,6 +60,7 @@ for i in range(9):
 assets['explosion_anim'] = explosion_anim
 
 class Hero(pygame.sprite.Sprite):
+ 
     def __init__(self, groups, assets):
         # Construindo o Sprite do herói
         pygame.sprite.Sprite.__init__(self)
@@ -55,22 +70,42 @@ class Hero(pygame.sprite.Sprite):
         self.rect.x = 2 * HERO_WIDTH
         self.rect.y = hero_y-20
         self.speedx = 0
+        self.speedy = 0
         self.groups = groups
         self.assets = assets
+        self.state = STILL
 
     def update(self):
+        
+        self.speedy += gravidade
+
+        if self.speedy > 0:
+            self.state = caindo
 
         self.rect.x += self.speedx
+        self.rect.y += self.speedy
+
+        if self.rect.bottom > GROUND:
+            self.rect.bottom = GROUND
+            self.speedy = 0
+            self.state = STILL
 
         if self.rect.right > WIDTH:
             self.rect.right = WIDTH
         if self.rect.left < 0:
             self.rect.left = 0
-
+#TIRO
     def shoot(self):
         new_bullet = Bullet(self.assets, self.rect.right, self.rect.centerx)
         self.groups['all_sprites'].add(new_bullet)
         self.groups['all_bullets'].add(new_bullet)
+
+#Pula    
+    def jump(self):
+        # Só pode pular se ainda não estiver pulando ou caindo
+        if self.state == STILL:
+            self.speedy -= vi_pulo
+            self.state = pulando
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, assets):
@@ -103,18 +138,16 @@ class Bullet(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
         self.rect.centerx = centerx
-        self.rect.right = right
-        self.rect.x = 0
         self.rect.y = hero_y + 25
         self.speedx = 8
         self.speedy = 0
-
+ 
     def update(self):
 
         self.rect.x += self.speedx
         self.rect.y += self.speedy
 
-        if self.rect.right > WIDTH or self.rect.left < 0:
+        if self.rect.left > WIDTH or self.rect.right < 0: 
             self.kill()
 
 class Explosion(pygame.sprite.Sprite):
@@ -148,7 +181,7 @@ class Explosion(pygame.sprite.Sprite):
                 center = self.rect.center
                 self.image = self.explosion_anim[self.frame]
                 self.rect = self.image.get_rect()
-                self.rect.center - center
+                self.rect.center = center
 
 game = 1
 
@@ -184,17 +217,19 @@ while game != 0:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                player.speedx -= 3
+                player.speedx -= 5
             if event.key == pygame.K_RIGHT:
-                player.speedx += 3
+                player.speedx += 5
             if event.key == pygame.K_SPACE:
                 player.shoot()
-                
+            if event.key == pygame.K_UP:
+                player.jump()
+
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
-                player.speedx += 3
+                player.speedx += 10
             if event.key == pygame.K_RIGHT:
-                player.speedx -= 3
+                player.speedx -= 5
             
     all_sprites.update()
 
@@ -204,7 +239,7 @@ while game != 0:
         all_sprites.add(m)
         all_enemies.add(m)
 
-        explosao = Explosion(enemy.rect.center, assets)
+        explosao = Explosion(hit.rect.center, assets)
         all_sprites.add(explosao)
 
     hits = pygame.sprite.spritecollide(player, all_enemies, True)
