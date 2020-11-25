@@ -23,7 +23,7 @@ gravidade=2
 #velocidade inicial do pulo
 vi_pulo=30
 
-GROUND = HEIGHT * 5 // 6    
+GROUND = (HEIGHT * 5 - 100 ) // 6    
 
 # Configurações necessárias do inimigo
 ENEMY_WIDTH = 30
@@ -68,7 +68,7 @@ class Hero(pygame.sprite.Sprite):
         self.image = assets['hero_img']
         self.rect = self.image.get_rect()
         self.rect.x = 2 * HERO_WIDTH
-        self.rect.y = hero_y-20
+        self.rect.y = hero_y
         self.speedx = 0
         self.speedy = 0
         self.groups = groups
@@ -76,7 +76,7 @@ class Hero(pygame.sprite.Sprite):
         self.state = STILL
 
     def update(self):
-        
+                            
         self.speedy += gravidade
 
         if self.speedy > 0:
@@ -92,6 +92,7 @@ class Hero(pygame.sprite.Sprite):
 
         if self.rect.right > WIDTH:
             self.rect.right = WIDTH
+
         if self.rect.left < 0:
             self.rect.left = 0
 #TIRO
@@ -136,9 +137,8 @@ class Bullet(pygame.sprite.Sprite):
 
         self.image = assets['bullet_img']
         self.rect = self.image.get_rect()
-
         self.rect.centerx = centerx
-        self.rect.y = hero_y + 25
+        self.rect.y = hero_y + 10
         self.speedx = 8
         self.speedy = 0
  
@@ -227,7 +227,7 @@ while game != 0:
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
-                player.speedx += 10
+                player.speedx += 5
             if event.key == pygame.K_RIGHT:
                 player.speedx -= 5
             
