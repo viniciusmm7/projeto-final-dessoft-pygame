@@ -1,36 +1,43 @@
 # Importando bibliotecas a serem utilizadas:
-import pygame
-import random
-import time
-from os import path
+import pygame, random, time
+from pygame.locals import *
 
 # ============================== ATENÇÃO, FALTA COLOCAR SOM ==============================
 pygame.init()
 pygame.mixer.init()
 
 # Gerando a página
-WIDTH = 800 # Largura da página que vai abrir
-HEIGHT = 450 # Altura da página que vai abrir
-window = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Raposona Braba')        # Título do jogo
+WIDTH = 1600 # Largura da página que vai abrir
+HEIGHT = 900 # Altura da página que vai abrir
+TITULO = 'Insper > fgv'
+window = pygame.display.set_mode((WIDTH, HEIGHT), FULLSCREEN)
+pygame.display.set_caption(TITULO)        # Título do jogo
 
 
 # Configurações necessárias do herói
 FPS = 60
-HERO_WIDTH = 70
-HERO_HEIGHT = 70
+HERO_WIDTH = int(WIDTH // 10)
+HERO_HEIGHT = int(HEIGHT // 5.625)
 
-hero_y = 2*HEIGHT/3-20 # Variável da posição no eixo y do herói
+hero_y = 2*HEIGHT/3 # Variável da posição no eixo y do herói
+
+gravidade = int(HEIGHT // 225) # Gravidade
+vi_pulo = 15 * gravidade # Velocidade inicial do pulo
+GROUND = (HEIGHT * 5 - HEIGHT/4.5) // 6
+
+# State
+STILL = 0
+JUMPING = 1
 
 # Configurações necessárias do inimigo
-ENEMY_WIDTH = 30
-ENEMY_HEIGHT = 40
+ENEMY_WIDTH = int(HERO_WIDTH // 2.5)
+ENEMY_HEIGHT = int(HERO_HEIGHT // 2)
 
 enemy_y = 2*HEIGHT/3 # Variável da posição no eixo y do inimigo
 
 # Configurações necessárias do tiro
-BULLET_WIDTH = 10
-BULLET_HEIGHT = 10
+BULLET_WIDTH = int(HERO_WIDTH // 1.6)
+BULLET_HEIGHT = int(HERO_HEIGHT // 2)
 
 # ================================== Funções e classes: ==================================
 # Função para iniciar elementos do jogo
@@ -53,6 +60,7 @@ def load_assets():
     assets['bullet_img'] = pygame.transform.scale(assets['bullet_img'], (BULLET_WIDTH, BULLET_HEIGHT))
     assets["explosion_anim"] = explosion_anim
     assets["score_font"] = pygame.font.Font('assets/font/PressStart2P.ttf', 28)
+    
     return assets
 
 # ----- Herói (raposa) -----
@@ -67,18 +75,28 @@ class Hero(pygame.sprite.Sprite):
         self.rect.x = 2 * HERO_WIDTH
         self.rect.y = hero_y
         self.speedx = 0
+        self.speedy = 0
         self.groups = groups
         self.assets = assets
-
+        self.state = STILL
         self.last_shot = pygame.time.get_ticks()
-        self.shoot_ticks = 500
+        self.shoot_ticks = 100 # Tempo para poder atirar novamente em milisegundos
 
     def update(self):
 
+        self.speedy += gravidade
+        
         self.rect.x += self.speedx
+        self.rect.y += self.speedy
+
+        if self.rect.bottom > GROUND:
+            self.rect.bottom = GROUND
+            self.speedy = 0
+            self.state = STILL
 
         if self.rect.right > WIDTH:
             self.rect.right = WIDTH
+            
         if self.rect.left < 0:
             self.rect.left = 0
 
@@ -92,9 +110,15 @@ class Hero(pygame.sprite.Sprite):
             
             self.last_shot = now
         
-            new_bullet = Bullet(self.assets, self.rect.right, self.rect.centerx)
+            new_bullet = Bullet(self.assets, self.rect.right, self.rect.center)
             self.groups['all_sprites'].add(new_bullet)
             self.groups['all_bullets'].add(new_bullet)
+
+    def jump(self):
+
+        if self.state == STILL:
+            self.speedy -= vi_pulo
+            self.state = JUMPING
 
 # ----- Inimigo (lagartixa) -----
 class Enemy(pygame.sprite.Sprite):
@@ -107,7 +131,7 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = random.randint(WIDTH/2, WIDTH - ENEMY_WIDTH)
         self.rect.y = enemy_y
-        self.speedx = -2
+        self.speedx = random.randint(-20, -5)
         self.speedy = 0
 
     def update(self):
@@ -118,29 +142,26 @@ class Enemy(pygame.sprite.Sprite):
         if self.rect.right < 0 or self.rect.left > WIDTH:
             self.rect.x = random.randint(WIDTH/2, WIDTH - ENEMY_WIDTH)
             self.rect.y = enemy_y
-            self.speedx = -2
+            self.speedx = random.randint(-20, -5)
             self.speedy = 0
 
 # ----- Projétil -----
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, assets, left, centerx):
+    def __init__(self, assets, right, center):
         pygame.sprite.Sprite.__init__(self)
 
         self.image = assets['bullet_img']
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
-
-        self.rect.centerx = centerx
-        self.rect.left = left
-        self.rect.x = 0
-        self.rect.y = hero_y + 25
-        self.speedx = 5
+        self.rect.center = center
+        self.speedx = 15
+        
 
     def update(self):
 
         self.rect.x += self.speedx
 
-        if self.rect.right > WIDTH:
+        if self.rect.left > WIDTH or self.rect.right < 0:
             self.kill()
 
 # ----- Explosão (dano)-----
@@ -171,6 +192,7 @@ class Explosion(pygame.sprite.Sprite):
 
             if self.frame == len(self.explosion_anim):
                 self.kill()
+                
             else:
                 center = self.rect.center
                 self.image = self.explosion_anim[self.frame]
@@ -197,54 +219,60 @@ def game_screen(window):
     all_sprites.add(player)
 
     # Criando os inimigos
-    for i in range(2):
+    for j in range(2):
         enemy = Enemy(assets)
         all_sprites.add(enemy)
         all_enemies.add(enemy)
 
-    # Criando estados do jogo
+    # Status
     DONE = 0
     PLAYING = 1
     EXPLODING = 2
-    state = PLAYING
+    status = PLAYING
 
     keys_down = {}
     score = 0
     lives = 3
         
     # ===== Loop principal =====
-    while state != DONE:
+    while status != DONE:
         clock.tick(FPS)
         
         # ----- Trata eventos
         for event in pygame.event.get():
             # ----- Verifica consequências
             if event.type == pygame.QUIT:
-                state = DONE
+                status = DONE
             # Verifica teclado modo de jogo
-            if state == PLAYING:
+            if status == PLAYING:
                 # Verifica se apertou alguma tecla
                 if event.type == pygame.KEYDOWN:
 
                     keys_down[event.key] = True
                     if event.key == pygame.K_LEFT:
-                        player.speedx -= 3
+                        player.speedx -= 10
+
                     if event.key == pygame.K_RIGHT:
-                        player.speedx += 3
+                        player.speedx += 10
+
                     if event.key == pygame.K_SPACE:
                         player.shoot()
+
+                    if event.key == pygame.K_UP:
+                        player.jump()
+
                 # Verifica se soltou alguma tecla
                 if event.type == pygame.KEYUP:
                     if event.key in keys_down and keys_down[event.key]:
                         if event.key == pygame.K_LEFT:
-                            player.speedx += 3
+                            player.speedx += 10
                         if event.key == pygame.K_RIGHT:
-                            player.speedx -= 3
+                            player.speedx -= 10
 
         # ----- Atualiza o estado do jogo
         all_sprites.update()
 
-        if state == PLAYING:
+        if status == PLAYING:
         
             hits = pygame.sprite.groupcollide(all_enemies, all_bullets, True, True)
             for hit in hits:
@@ -252,12 +280,10 @@ def game_screen(window):
                 m = Enemy(assets)
                 all_sprites.add(m)
                 all_enemies.add(m)
-
-                # ===================== BUGADO =====================
+                
                 # No lugar do inimigo antigo, adicionar uma explosão
                 explosao = Explosion(hit.rect.center, assets)
                 all_sprites.add(explosao)
-                # ==================================================
 
                 # Pontos recebidos pela eliminação do inimigo
                 score += 100
@@ -270,20 +296,23 @@ def game_screen(window):
                 lives -= 1
                 explosao = Explosion(player.rect.center, assets)
                 all_sprites.add(explosao)
-                state = EXPLODING
+                status = EXPLODING
                 keys_down = {}
                 explosion_tick = pygame.time.get_ticks()
                 explosion_duration = explosao.frame_ticks * len(explosao.explosion_anim)
                 
-        elif state == EXPLODING:
+        elif status == EXPLODING:
             now = pygame.time.get_ticks()
             if now - explosion_tick > explosion_duration:
                 if lives == 0:
-                    state = DONE
+                    status = DONE
                 else:
-                    state = PLAYING
+                    status = PLAYING
                     player = Hero(groups, assets)
                     all_sprites.add(player)
+                    enemy = Enemy(assets)
+                    all_sprites.add(enemy)
+                    all_enemies.add(enemy)
 
         # ----- Gera saídas
         window.fill((0, 0, 0))
@@ -305,8 +334,13 @@ def game_screen(window):
         
         pygame.display.update() # Mostra um novo frame
 
-
-game_screen(window)
+print('*' * len(TITULO))
+print(TITULO.upper())
+print('*' * len(TITULO))
+print('Utilize a tecla "ESPAÇO" ou seta para cima para pular.')
 
 # ===== Finalizando =====
-pygame.quit()
+try:
+    game_screen(window)
+finally:
+    pygame.quit()
