@@ -15,11 +15,16 @@ pygame.display.set_caption(TITULO)        # Título do jogo
 
 
 # Configurações necessárias do herói
+<<<<<<< HEAD
 FPS = 60
 HERO_WIDTH = int(WIDTH // 10)
 HERO_HEIGHT = int(HEIGHT // 5.625)
 
 hero_y = 2*HEIGHT/3 # Variável da posição no eixo y do herói
+=======
+HERO_WIDTH = 100 # Mudar
+HERO_HEIGHT = 100 # Mudar
+>>>>>>> 0a68858631976afcee778a4324e0647262ae83b7
 
 gravidade = int(HEIGHT // 225) # Gravidade
 vi_pulo = 15 * gravidade # Velocidade inicial do pulo
@@ -29,11 +34,24 @@ GROUND = (HEIGHT * 5 - HEIGHT/4.5) // 6
 STILL = 0
 JUMPING = 1
 
+#Gravidade
+gravidade=2
+
+#velocidade inicial do pulo
+vi_pulo=30
+
+GROUND = (HEIGHT * 5 - 100 ) // 6    
+
 # Configurações necessárias do inimigo
 ENEMY_WIDTH = int(HERO_WIDTH // 2.5)
 ENEMY_HEIGHT = int(HERO_HEIGHT // 2)
 
 enemy_y = 2*HEIGHT/3 # Variável da posição no eixo y do inimigo
+
+# Define estados possíveis do jogador
+STILL = 0
+pulando = 1
+caindo = 1
 
 # Configurações necessárias do tiro
 BULLET_WIDTH = int(HERO_WIDTH // 1.6)
@@ -63,8 +81,33 @@ def load_assets():
     
     return assets
 
+<<<<<<< HEAD
 # ----- Herói (raposa) -----
+=======
+BULLET_WIDTH = 50      
+BULLET_HEIGHT = 50
+
+# Inicia assets
+assets = {}
+assets['background'] = pygame.image.load('assets/img/game-background-1.png').convert()
+assets['background'] = pygame.transform.scale(assets['background'], (WIDTH, HEIGHT))
+assets['enemy_img'] = pygame.image.load('assets/img/mad-enemy-left-1.png').convert_alpha()
+assets['enemy_img'] = pygame.transform.scale(assets['enemy_img'], (ENEMY_WIDTH, ENEMY_HEIGHT))
+assets['hero_img'] = pygame.image.load('assets/img/hero-right-0.png').convert_alpha()
+assets['hero_img'] = pygame.transform.scale(assets['hero_img'], (HERO_WIDTH, HERO_HEIGHT))
+assets['bullet_img'] = pygame.image.load('assets/img/bullet.png').convert_alpha()
+assets['bullet_img'] = pygame.transform.scale(assets['bullet_img'], (BULLET_WIDTH, BULLET_HEIGHT))
+explosion_anim = []
+for i in range(9):
+    filename = 'assets/img/regularExplosion0{}.png'.format(i)
+    img = pygame.image.load(filename).convert()
+    img = pygame.transform.scale(img, (30, 30))
+    explosion_anim.append(img)
+assets['explosion_anim'] = explosion_anim
+
+>>>>>>> 0a68858631976afcee778a4324e0647262ae83b7
 class Hero(pygame.sprite.Sprite):
+ 
     def __init__(self, groups, assets):
         # Construindo o Sprite do herói
         pygame.sprite.Sprite.__init__(self)
@@ -79,10 +122,18 @@ class Hero(pygame.sprite.Sprite):
         self.groups = groups
         self.assets = assets
         self.state = STILL
+<<<<<<< HEAD
         self.last_shot = pygame.time.get_ticks()
         self.shoot_ticks = 100 # Tempo para poder atirar novamente em milisegundos
+=======
+>>>>>>> 0a68858631976afcee778a4324e0647262ae83b7
 
     def update(self):
+                            
+        self.speedy += gravidade
+
+        if self.speedy > 0:
+            self.state = caindo
 
         self.speedy += gravidade
         
@@ -96,12 +147,17 @@ class Hero(pygame.sprite.Sprite):
 
         if self.rect.right > WIDTH:
             self.rect.right = WIDTH
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> 0a68858631976afcee778a4324e0647262ae83b7
         if self.rect.left < 0:
             self.rect.left = 0
-
+#TIRO
     def shoot(self):
 
+<<<<<<< HEAD
         now = pygame.time.get_ticks()
 
         elapsed_ticks = now - self.last_shot
@@ -121,6 +177,15 @@ class Hero(pygame.sprite.Sprite):
             self.state = JUMPING
 
 # ----- Inimigo (lagartixa) -----
+=======
+#Pula    
+    def jump(self):
+        # Só pode pular se ainda não estiver pulando ou caindo
+        if self.state == STILL:
+            self.speedy -= vi_pulo
+            self.state = pulando
+
+>>>>>>> 0a68858631976afcee778a4324e0647262ae83b7
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, assets):
         # Construindo o Sprite do vilão
@@ -153,15 +218,27 @@ class Bullet(pygame.sprite.Sprite):
         self.image = assets['bullet_img']
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
+<<<<<<< HEAD
         self.rect.center = center
         self.speedx = 15
         
 
+=======
+        self.rect.centerx = centerx
+        self.rect.y = hero_y + 10
+        self.speedx = 8
+        self.speedy = 0
+ 
+>>>>>>> 0a68858631976afcee778a4324e0647262ae83b7
     def update(self):
 
         self.rect.x += self.speedx
 
+<<<<<<< HEAD
         if self.rect.left > WIDTH or self.rect.right < 0:
+=======
+        if self.rect.left > WIDTH or self.rect.right < 0: 
+>>>>>>> 0a68858631976afcee778a4324e0647262ae83b7
             self.kill()
 
 # ----- Explosão (dano)-----
@@ -199,6 +276,7 @@ class Explosion(pygame.sprite.Sprite):
                 self.rect = self.image.get_rect()
                 self.rect.center = center
 
+<<<<<<< HEAD
 # ----- Função principal -----
 def game_screen(window):
     clock = pygame.time.Clock()
@@ -344,3 +422,77 @@ try:
     game_screen(window)
 finally:
     pygame.quit()
+=======
+game = 1
+
+clock = pygame.time.Clock()
+FPS = 60
+
+# Criando inimigos
+all_sprites = pygame.sprite.Group()
+all_enemies = pygame.sprite.Group()
+all_bullets = pygame.sprite.Group()
+groups = {}
+groups['all_sprites'] = all_sprites
+groups['all_enemies'] = all_enemies
+groups['all_bullets'] = all_bullets
+
+player = Hero(groups, assets)
+all_sprites.add(player)
+
+for i in range(2):
+    enemy = Enemy(assets)
+    all_sprites.add(enemy)
+    all_enemies.add(enemy)
+    
+# ----- Loop principal -----
+while game != 0:
+
+    clock.tick(FPS)
+
+    for event in pygame.event.get():
+
+        if event.type == pygame.QUIT:
+            game = 0
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                player.speedx -= 5
+            if event.key == pygame.K_RIGHT:
+                player.speedx += 5
+            if event.key == pygame.K_SPACE:
+                player.shoot()
+            if event.key == pygame.K_UP:
+                player.jump()
+
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT:
+                player.speedx += 5
+            if event.key == pygame.K_RIGHT:
+                player.speedx -= 5
+            
+    all_sprites.update()
+
+    hits = pygame.sprite.groupcollide(all_enemies, all_bullets, True, True)
+    for hit in hits: 
+        m = Enemy(assets)
+        all_sprites.add(m)
+        all_enemies.add(m)
+
+        explosao = Explosion(hit.rect.center, assets)
+        all_sprites.add(explosao)
+
+    hits = pygame.sprite.spritecollide(player, all_enemies, True)
+    if len(hits) > 0:
+        game = 0
+
+    window.fill((192, 0, 38))
+    window.blit(assets['background'], (0, 0))
+
+    all_sprites.draw(window)
+    
+    pygame.display.update()
+
+
+pygame.quit()
+>>>>>>> 0a68858631976afcee778a4324e0647262ae83b7
