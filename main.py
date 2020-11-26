@@ -9,7 +9,7 @@ pygame.init()
 pygame.mixer.init()
 
 # ----- Gerando tela principal
-TITULO = 'Insper > FGV'
+TITULO = 'RAPOSA LOKA'
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption(TITULO)
 
